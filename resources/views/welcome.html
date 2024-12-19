@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laravel Vue App</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <style>
+      body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+      }
+      .list-note{
+        background-color: rgb(243, 243, 243);
+        margin-top:20px;
+      }
+      .note{
+        border:1px solid black;
+        border-radius: 10px;
+        margin-bottom:10px;
+        box-shadow: 4px 4px 4px;
+      }
+      .note-text{
+        margin:10px;
+        padding:5px;
+        border:1px solid rgb(143, 143, 143);
+      }
+  </style>
+</head>
+<body>
+  <div id="app">
+    
+    <h1>Заметки</h1>
+    <input type="text" v-model="newNoteTitle" placeholder="Введите Заголовок" />
+    <input type="text" v-model="newNoteText" placeholder="Введите заметку" />
+    <input type="color" v-model="newNoteColor">
+    <button @click="addNote" :style="addStyle">Добавить заметку</button>
+    <button @click="saveNote" :style="saveStyle">Сохранить заметку</button>
+    <button @click="cancel" :style="cancelStyle">Отмена</button>
+    <button @click="clearAll">Очистить</button>
+    <div class="list-note">
+        <div class="note" v-for="(note, index) in notes" :key="index" :style="noteStyles[index]">
+            <h1 style="display:inline-block;margin:4px;">{{ note[0] }}</h1><button style="display:inline;margin-left:auto;color:rgb(255, 0, 0);" @click="removeNote(index)">Удалить</button>
+            <button style="display:inline;margin-left:auto;color:rgb(0, 0, 0);" @click="startEditNote(index)">Редактировать</button>
+            <div class="note-text">{{ note[1] }}</div>
+            
+        </div>
+      </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data(){
+          return{
+            newNoteText: '',
+            newNoteTitle: '',
+            notes:[],
+            noteStyles:[],
+            newNoteColor:'#000000',
+            addStyle:{display:"block"},
+            saveStyle:{display:"none"},
+            cancelStyle:{display:"none"},
+            editindex:-1
+          }
+        },
+        mounted() {
+              this.notes = JSON.parse(localStorage.getItem('notes'))|| [];
+              this.noteStyles = JSON.parse(localStorage.getItem('noteStyles'))|| [];
+            },
+        methods: {
+            clearAll(){
+              localStorage.clear();
+              location.reload();
+            },
+            addNote() {
+                if (this.newNoteText.trim() !== '') {
+                    this.notes.push([this.newNoteTitle.trim(),this.newNoteText.trim()]);
+                    this.noteStyles.push({color:this.newNoteColor});
+                    this.newNoteText = '';
+                    this.newNoteTitle = '';
+                    localStorage.setItem('notes', JSON.stringify(this.notes));
+                    localStorage.setItem('noteStyles', JSON.stringify(this.noteStyles));
+                }
+            },
+            removeNote(index) {
+                this.notes.splice(index, 1);
+                this.noteStyles.splice(index,1);
+                localStorage.setItem('notes', JSON.stringify(this.notes));
+                localStorage.setItem('noteStyles', JSON.stringify(this.noteStyles));
+            },
+            startEditNote(index){
+              this.newNoteTitle=this.notes[index][0];
+              this.newNoteText=this.notes[index][1];
+              this.newNoteColor=this.noteStyles[index];
+              this.addStyle={display:"none"};
+              this.saveStyle={display:"block"};
+              this.cancelStyle={display:"block"};
+              this.editindex=index;
+            },
+            cancel(){
+              this.newNoteTitle="";
+              this.newNoteText="";
+              this.newNoteColor="#000000";
+              this.addStyle={display:"block"};
+              this.saveStyle={display:"none"};
+              this.cancelStyle={display:"none"};
+              this.editindex=-1;
+            },
+            saveNote(){
+              if (this.editindex!==-1 && this.newNoteText.trim()!==""){
+                this.notes[this.editindex]=[this.newNoteTitle.trim(),this.newNoteText.trim()]
+                this.noteStyles[this.editindex]=this.newNoteColor;
+                localStorage.setItem('notes', JSON.stringify(this.notes));
+                localStorage.setItem('noteStyles', JSON.stringify(this.noteStyles));
+                this.cancel();
+              }
+            }
+        }
+    });
+</script>
+</body>
+</html>
